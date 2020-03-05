@@ -44,7 +44,8 @@ with open("data.in") as f:
     for linie in f:
         translatie = [x for x in linie.split()]
         A[int(translatie[0])][translatie[1]] = int(translatie[2])
-    print(A)
+    for x in A:
+        print(x)
 
 with open("cuvinte.in") as f:
     for linie in f:
