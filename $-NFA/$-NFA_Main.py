@@ -51,7 +51,7 @@ def eval(cuvant):
     return False
 
 
-with open("E:\PyCharmProjects\Datalambda.in") as f:
+with open("data.in") as f:
     A = []
     n = int(f.readline())
     m = int(f.readline())
