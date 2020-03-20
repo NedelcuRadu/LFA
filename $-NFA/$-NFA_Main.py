@@ -78,9 +78,11 @@ with open("data.in") as f:
         A.append(temp)
     for linie in f:
         translatie = [x for x in linie.split()]
-        A[int(translatie[0])][translatie[1]].append(int(translatie[2]))
+        try:
+            A[int(translatie[0])][translatie[1]].append(int(translatie[2]))
+        except: pass
 
-cuvant = input("Dati cuvantul:")
+cuvant = input("Dati cuvantul: ")
 try:
     print(eval(cuvant))
 except KeyError:
