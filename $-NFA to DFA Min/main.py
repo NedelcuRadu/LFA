@@ -1,6 +1,3 @@
-from copy import deepcopy
-
-
 def ApplyLambda(A, States):  # States = Set din starile curente
     """
 
@@ -58,7 +55,7 @@ def comparator(x):
 
 
 def Renotare(C, alfabet):  # Matrice, alfabet
-    stari_noi = set()  # Aflam ce stari au ramas
+    stari_noi = {0}  # Aflam ce stari au ramas
     for i in range(len(C)):
         for j in alfabet:
             stari_noi.add(C[i][j])
@@ -132,7 +129,7 @@ def GenAutomat(A, Q, numefisier):  # Pt NFA-uri
 def GenAutomat2(A, Q, numefisier):  # Pt DFA-uri
     with open(numefisier, "w") as g:
         nr_tranzitii = 0
-        g.write(f"{len(A)+1}\n")
+        g.write(f"{len(A) + 1}\n")  # +1 pt sink state
         g.write(f"{len(A[0]) - 1}\n")
         for key in A[0].keys():
             if key != "final":
@@ -161,6 +158,37 @@ def GenAutomat2(A, Q, numefisier):  # Pt DFA-uri
         for litera in A[iter].items():
             if litera[0] != "final":
                 g.write(f"{len(A)} {litera[0]} {len(A)}\n")
+
+
+def GenAutomat3(A, Q, numefisier):  # Pt DFA-uri
+    with open(numefisier, "w") as g:
+        nr_tranzitii = 0
+        g.write(f"{len(A)}\n")
+        g.write(f"{len(A[0]) - 1}\n")
+        for key in A[0].keys():
+            if key != "final":
+                g.write(f"{key} ")
+        g.write('\n')
+        g.write(f"{Q}\n")
+        nr_finale = 0
+        for i in range(len(A)):
+            if A[i]["final"] == True:
+                nr_finale += 1
+        g.write(f"{nr_finale}\n")
+        for i in range(len(A)):
+            if A[i]["final"] == True:
+                g.write(f"{i} ")
+        g.write('\n')
+        for dict in A:
+            for i in dict.items():
+                if i[0] != "final":
+                    nr_tranzitii += 1
+        g.write(str(nr_tranzitii))
+        g.write('\n')
+        for iter in range(len(A)):
+            for litera in A[iter].items():
+                if litera[0] != "final":
+                    g.write(f"{iter} {litera[0]} {litera[1]}\n")
 
 
 def LNFAtoNFA(fisier_in, fisier_out):
@@ -306,7 +334,7 @@ def NFAtoDFA(fisier_in, fisier_out):
     for i in range(len(C)):
         for litera in alfabet:
             C[i][litera] = search(initial, C[i][litera])
-    print("DFA")
+    print("DFA:")
     print(C)
     GenAutomat2(C, Q, fisier_out)
 
@@ -329,7 +357,8 @@ def DFAmin(fisier_in, fisier_out):
             translatie = [x for x in linie.split()]
             try:
                 A[int(translatie[0])][translatie[1]] = (int(translatie[2]))
-            except: pass
+            except:
+                pass
     for stare in final:
         A[stare]["final"] = True
     # Facem tabelul cu echivalenta
@@ -366,8 +395,9 @@ def DFAmin(fisier_in, fisier_out):
                 Q = list(i)[0]
             Inlocuire(A, alfabet, j,
                       list(i)[0])  # Inlocuim starile echivalente cu o singura stare(cea mai mica ca ordin)
+
     A = elimin_duplicate(A, alfabet)  # Eliminam duplicatele
-    Renotare(A, alfabet)
+    Renotare(A, alfabet)  # Renotam starile
     viz = [False for iter in range(n)]
     B = []  # Scapam de starile inaccesibile facand DFS din starea initiala
     DFS(A, alfabet, viz, Q)
@@ -408,9 +438,9 @@ def DFAmin(fisier_in, fisier_out):
                 B[iter][litera] = -1
     print("DFA Minimal:")
     print(B)
-    #GenAutomat2(B, Q, fisier_out)
+    GenAutomat3(B, Q, fisier_out)
 
 
-LNFAtoNFA("E:\PyCharmProjects\Datalambda.in", "E:\PyCharmProjects\GeneratedNFA.in")
-NFAtoDFA("E:\PyCharmProjects\GeneratedNFA.in", "E:\PyCharmProjects\GeneratedDFA")
-DFAmin("E:\PyCharmProjects\GeneratedDFA", "E:\PyCharmProjects\DFAmin.in")
+LNFAtoNFA("Datalambda.in", "GeneratedNFA.in")
+NFAtoDFA("GeneratedNFA.in", "GeneratedDFA")
+DFAmin("GeneratedDFA", "DFAmin.in")
