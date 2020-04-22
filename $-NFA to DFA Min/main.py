@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 def ApplyLambda(A, States):  # States = Set din starile curente
     """
 
@@ -25,6 +28,23 @@ def LambdaTranzitie(A, stari_initiale):
     return stari_initiale  # Lambda closure
 
 
+def pasechiv(A, n, alfabet, echivalenta):
+    for litera in alfabet:
+        for i in range(n):
+            for j in range(i):
+                if not echivalenta[A[i][litera]][
+                    A[j][litera]]:  # Daca starile in care putem ajunge nu sunt echivalente
+                    echivalenta[i][j] = False
+                    echivalenta[j][i] = False
+    return echivalenta
+
+
+def totalechiv(A, n, alfabet, echivalenta):
+    while echivalenta != pasechiv(A, n, alfabet, echivalenta):
+        echivalenta = pasechiv(A, n, alfabet, echivalenta)
+    return echivalenta
+
+
 def DFS(A, alfabet, viz,
         noduri):  # Matricea de tranzitii, alfabetul,vectorul de bool si setul cu noduri curente/nodul curent
     if isinstance(noduri, set):  # Daca e set de noduri
@@ -47,7 +67,7 @@ def search(L, val):  # Dictionar si valoare, returneaza pozitia sau -1
     return len(L)
 
 
-def comparator(x):
+def comparator(x):  # Compara dupa lungimea lui X si apoi dupa cel mai mic element din el
     if isinstance(x, set):
         return len(x), sorted(list(x))[0]  # conversia la liste e mereu sortata? Better be sure
     else:
@@ -249,7 +269,7 @@ def LNFAtoNFA(fisier_in, fisier_out):
                 Inlocuire(B, alfabet[:-1], i, j)
         if not found:
             C.append(B[i])
-    stari_noi = set()  # Renotam starile
+    stari_noi = {0}  # Renotam starile
     # Nu merge folosita functia de renotare pt ca lucram cu union aici
     for i in range(len(C)):
         for j in alfabet[:-1]:
@@ -292,13 +312,13 @@ def NFAtoDFA(fisier_in, fisier_out):
     for litera in alfabet:
         if len(A[Q][litera]) > 0:  # Sa putem ajunge cu litera intr-o stare
             initial.append(A[Q][litera])
-    translatii = []
     for stare_comasata in initial[1:]:
         for stare in stare_comasata:
             for litera in alfabet:
-                if len(A[stare][litera]) > 0 and A[stare][litera] not in initial:
+                if len(A[stare][litera]) > 0 and A[stare][litera] not in initial:  # Sa nu fie deja in coada
                     initial.append(A[stare][litera])
-    initial.sort(key=comparator)
+    initial.sort(key=comparator)  # Compara dupa lungimea lui X si apoi dupa cel mai mic element din el
+    # Facem un dictionar ce sa suporte si starile comasate
     B = dict()
     for i in range(len(initial)):
         temp = dict()
@@ -309,16 +329,19 @@ def NFAtoDFA(fisier_in, fisier_out):
             B[list(initial[i])[0]] = temp
         else:
             B[frozenset(initial[i])] = temp
+
     for i in range(len(initial)):
         if len(initial[i]) == 1:  # Daca e stare normala
             for litera in alfabet:
-                B[list(initial[i])[0]][litera] = B[list(initial[i])[0]][litera].union(A[list(initial[i])[0]][litera])
+                B[list(initial[i])[0]][litera] = B[list(initial[i])[0]][litera].union(
+                    A[list(initial[i])[0]][litera])  # Adaugam la tranzitii fiecare stare unde se putea ajunge
         else:  # Daca e stare comasata
             for j in initial[i]:  # Luam fiecare stare componenta
                 if A[j]['final']:  # Daca starea componenta e finala -> compusa e finala
                     B[frozenset(initial[i])]['final'] = True
                 for litera in alfabet:
-                    B[frozenset(initial[i])][litera] = B[frozenset(initial[i])][litera].union(A[j][litera])
+                    B[frozenset(initial[i])][litera] = B[frozenset(initial[i])][litera].union(
+                        A[j][litera])  # Adaugam fiecare stare tranzitie de la fiecare stare componenta
     C = []
     for i in range(len(B)):
         temp = dict()
@@ -330,7 +353,7 @@ def NFAtoDFA(fisier_in, fisier_out):
             C[i] = B[list(initial[i])[0]]
         else:
             C[i] = B[frozenset(initial[i])]
-    # Renotam starile compozite
+    # Renotam starile
     for i in range(len(C)):
         for litera in alfabet:
             C[i][litera] = search(initial, C[i][litera])
@@ -371,13 +394,8 @@ def DFAmin(fisier_in, fisier_out):
             if (i in final and j not in final) or (j in final and i not in final):
                 echivalenta[i][j] = False
                 echivalenta[j][i] = False
-    for litera in alfabet:
-        for i in range(n):
-            for j in range(i):
-                if not echivalenta[A[i][litera]][
-                    A[j][litera]]:  # Daca starile in care putem ajunge nu sunt echivalente
-                    echivalenta[i][j] = False
-                    echivalenta[j][i] = False
+
+    echivalenta = totalechiv(A, n, alfabet, echivalenta)
     clase_echiv = [set() for iter in range(n)]  # Determinam clasele de echivalenta
     for i in range(n):
         for j in range(n):
