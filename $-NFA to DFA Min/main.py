@@ -1,6 +1,3 @@
-from copy import deepcopy
-
-
 def ApplyLambda(A, States):  # States = Set din starile curente
     """
 
